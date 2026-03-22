@@ -47,26 +47,6 @@ export const API_ENDPOINTS = {
   // 其他 API 端点...
 } as const;
 
-// ========== 外部 API 配置（后端对外接口） ==========
-
-// 是否启用远程 API 配置源（true: 从后端 API 加载配置，false: 使用本地 JSON）
-export const USE_REMOTE_CONFIG = (): boolean =>
-  import.meta.env.VITE_USE_REMOTE_CONFIG === 'true';
-
-// 是否使用后端 AI Proxy（true: 走 RuoYi 后端代理，false: 走本地 Express 代理）
-export const USE_BACKEND_PROXY = (): boolean =>
-  import.meta.env.VITE_USE_BACKEND_PROXY === 'true';
-
-// 外部 API 基础地址
-export const getExternalAPIBaseURL = (): string =>
-  import.meta.env.VITE_EXTERNAL_API_BASE || '';
-
-// 外部 API 鉴权凭证
-export const EXTERNAL_API_CREDENTIALS = {
-  appId: import.meta.env.VITE_EXTERNAL_APP_ID || '',
-  appSecretHash: import.meta.env.VITE_EXTERNAL_APP_SECRET_HASH || '',
-};
-
 // Axios 默认配置
 export const AXIOS_CONFIG = {
   headers: {

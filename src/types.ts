@@ -50,18 +50,6 @@ export interface GenerateRequest {
   model: ModelType;
   difficulty: DifficultyLevel;
   outputFormat: OutputFormat;
-  // 领域特定字段
-  petType?: string;
-  petAge?: string;
-  healthStatus?: string;
-  specialCondition?: string;
-  videoType?: string;
-  scene?: string;
-  videoStyle?: string;
-  dogFeatures?: string;
-  duration?: string;
-  generationMode?: string;
-  platform?: string;
 }
 
 // 优化请求

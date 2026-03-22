@@ -15,7 +15,6 @@
           <button @click="openHelp" class="btn-icon" title="使用说明">📖</button>
           <button @click="openSettings" class="btn-icon" title="设置">⚙️</button>
           <button @click="openAbout" class="btn-icon" title="关于">ℹ️</button>
-          <button @click="openConfigTest" class="btn-icon" title="配置测试" v-if="isDevelopment">🔧</button>
         </nav>
       </div>
     </header>
@@ -479,76 +478,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 配置测试模态框 -->
-    <div v-if="showConfigTest" class="modal" @click.self="showConfigTest = false">
-      <div class="modal-content config-test-modal">
-        <div class="modal-header">
-          <h2>🔧 配置测试</h2>
-          <button @click="showConfigTest = false" class="close-btn">✕</button>
-        </div>
-        <div class="modal-body">
-          <div v-if="!configLoaded" class="loading-state">
-            <p>正在加载配置数据...</p>
-            <div class="spinner"></div>
-          </div>
-          <div v-else class="config-test-content">
-            <div class="config-summary">
-              <h3>配置摘要</h3>
-              <div class="summary-grid">
-                <div class="summary-item">
-                  <span class="summary-label">已启用模型:</span>
-                  <span class="summary-value">{{ availableModels.length }} 个</span>
-                </div>
-                <div class="summary-item">
-                  <span class="summary-label">可用领域:</span>
-                  <span class="summary-value">{{ availableDomains.length }} 个</span>
-                </div>
-                <div class="summary-item">
-                  <span class="summary-label">优化策略:</span>
-                  <span class="summary-value">{{ optimizationStrategies.length }} 种</span>
-                </div>
-                <div class="summary-item">
-                  <span class="summary-label">API 提供商:</span>
-                  <span class="summary-value">{{ availableProviders.length }} 个</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="config-details">
-              <h3>详细配置</h3>
-              <div class="detail-section">
-                <h4>已启用模型</h4>
-                <div class="model-list">
-                  <span v-for="model in availableModels" :key="model" class="model-tag">
-                    {{ getModelLabel(model) }}
-                  </span>
-                </div>
-              </div>
-              <div class="detail-section">
-                <h4>可用领域</h4>
-                <div class="domain-list">
-                  <span v-for="domain in availableDomains" :key="domain" class="domain-tag">
-                    {{ getDomainLabel(domain) }}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div class="config-actions">
-              <button @click="testConfigLoad" class="btn btn-primary">测试配置加载</button>
-              <button @click="reloadConfig" class="btn btn-secondary">重新加载配置</button>
-              <button @click="showConfigTest = false" class="btn btn-outline">关闭</button>
-            </div>
-
-            <div v-if="configTestResult" class="test-result">
-              <h4>测试结果</h4>
-              <pre>{{ JSON.stringify(configTestResult, null, 2) }}</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -558,8 +487,7 @@ import type { Prompt } from '@/types'
 import { promptGeneratorService } from '@/services/promptGenerator'
 import { apiService } from '@/services/api'
 import { storageService } from '@/services/storage'
-import { configService } from '@/services/configService'
-
+import { MODEL_CHARACTERISTICS, DOMAIN_TEMPLATES, OPTIMIZATION_STRATEGIES } from '@/constants'
 
 // 状态
 const activeTab = ref('generate')
@@ -569,8 +497,6 @@ const isOptimizing = ref(false)
 const showSettings = ref(false)
 const showAbout = ref(false)
 const showHelp = ref(false)
-const showConfigTest = ref(false)
-const isDevelopment = import.meta.env.DEV
 
 // 表单数据
 const selectedModel = ref('gpt-3.5')
@@ -616,7 +542,6 @@ const statistics = ref({
 
 // 消息提示
 const message = ref<{text: string; type: string} | null>(null)
-const configTestResult = ref<any>(null)
 
 // 可用选项
 const mainTabs = [
@@ -625,61 +550,26 @@ const mainTabs = [
   { id: 'library', label: '库', icon: '📋' },
 ]
 
-// 配置数据（从接口获取）
-const configLoaded = ref(false)
-const availableModels = ref<string[]>([])
-const availableDomains = ref<string[]>([])
-const outputFormats = ref<Array<{value: string; label: string}>>([
+// const availableModels = ['gpt-4', 'gpt-3.5', 'qwen', 'minmax', 'zhipu', 'douyin', 'claude', 'gemini', 'local']
+const availableModels = ['qwen', 'douyin']
+const availableDomains = ['writing', 'coding', 'painting', 'analysis', 'marketing', 'learning', 'business', 'smartTourism', 'scenicArea', 'smartPark', 'pet', 'dogVideo', 'dogVideoGeneration']
+const outputFormats = [
   { value: 'detailed', label: '详细' },
   { value: 'concise', label: '简洁' },
   { value: 'structured', label: '结构化' },
   { value: 'creative', label: '创意' },
-])
-const optimizationStrategies = ref<Array<{id: string; icon: string; name: string}>>([])
-const availableProviders = ref<string[]>([])
+]
 
-// 加载配置数据
-const loadConfig = async () => {
-  try {
-    await configService.init()
-    
-    // 获取已启用的模型 (返回ModelConfig数组，需要提取model_id)
-    const enabledModels = configService.getEnabledModels()
-    availableModels.value = enabledModels.map(m => m.model_id)
-    availableProviders.value = enabledModels
-      .filter(model => model.model_id === 'qwen' || model.model_id === 'douyin' || model.model_id === 'openai')
-      .map(m => m.model_id)
-    
-    // 获取领域列表
-    availableDomains.value = configService.getDomainList()
-    
-    // 获取优化策略 (返回StrategyConfig数组)
-    const strategies = configService.getStrategies()
-    optimizationStrategies.value = strategies.map(strategy => ({
-      id: strategy.strategy_id,
-      icon: strategy.icon,
-      name: strategy.name
-    }))
-    
-    configLoaded.value = true
-  } catch (error) {
-    console.error('配置数据加载失败:', error)
-    message.value = { text: '配置数据加载失败，使用默认配置', type: 'warning' }
-    
-    // 使用默认值
-    availableModels.value = ['qwen', 'douyin']
-    availableDomains.value = ['writing', 'coding', 'painting', 'analysis', 'marketing', 'learning', 'business', 'smartTourism', 'scenicArea', 'smartPark', 'pet', 'dogVideo', 'dogVideoGeneration']
-    optimizationStrategies.value = [
-      { id: 'clarity', icon: '✨', name: '清晰度' },
-      { id: 'specificity', icon: '🎯', name: '具体性' },
-      { id: 'efficiency', icon: '⚡', name: '效率' },
-      { id: 'creativity', icon: '💡', name: '创意' },
-      { id: 'precision', icon: '🎲', name: '精准' },
-    ]
-    availableProviders.value = ['qwen', 'douyin']
-    configLoaded.value = true
-  }
-}
+const optimizationStrategies = [
+  { id: 'clarity', icon: '✨', name: '清晰度' },
+  { id: 'specificity', icon: '🎯', name: '具体性' },
+  { id: 'efficiency', icon: '⚡', name: '效率' },
+  { id: 'creativity', icon: '💡', name: '创意' },
+  { id: 'precision', icon: '🎲', name: '精准' },
+]
+
+// const availableProviders = ['openai', 'qwen', 'minmax', 'zhipu', 'douyin']
+const availableProviders = ['qwen', 'douyin']
 
 // API 状态
 const apiStatus = computed(() => ({
@@ -711,19 +601,11 @@ const filteredLibrary = computed(() => {
 
 // 方法
 function getModelLabel(model: string) {
-  try {
-    return configService.getModelCharacteristics(model as any)?.name || model
-  } catch {
-    return model
-  }
+  return MODEL_CHARACTERISTICS[model as any]?.name || model
 }
 
 function getDomainLabel(domain: string) {
-  try {
-    return configService.getDomainInfo(domain as any)?.name || domain
-  } catch {
-    return domain
-  }
+  return DOMAIN_TEMPLATES[domain as any]?.name || domain
 }
 
 function getProviderLabel(provider: string) {
@@ -756,33 +638,13 @@ function generatePrompt() {
 
   isLoading.value = true
   try {
-    const request: any = {
+    const request = {
       keywords: form.value.keywords,
       requirement: form.value.requirement,
       domain: selectedDomain.value as any,
       model: selectedModel.value as any,
       difficulty: form.value.difficulty as any,
       outputFormat: form.value.outputFormat as any,
-    }
-
-    // 添加领域特定字段
-    if (selectedDomain.value === 'pet') {
-      request.petType = form.value.petType || '狗狗/猫猫'
-      request.petAge = form.value.petAge || '成年'
-      request.healthStatus = form.value.healthStatus || '健康'
-      request.specialCondition = form.value.specialCondition || '无特殊情况'
-    } else if (selectedDomain.value === 'dogVideo') {
-      request.videoType = form.value.videoType || '日常记录'
-      request.scene = form.value.scene || '室内/户外'
-      request.videoStyle = form.value.videoStyle || '温馨可爱'
-      request.dogFeatures = form.value.dogFeatures || '活泼可爱'
-      request.duration = form.value.duration || '1-3分钟'
-    } else if (selectedDomain.value === 'dogVideoGeneration') {
-      request.generationMode = form.value.generationMode || '文生视频'
-      request.platform = form.value.platform || '可灵AI'
-      request.videoStyle = form.value.videoStyle || '写实风格'
-      request.dogFeatures = form.value.dogFeatures || '品种特征明显'
-      request.duration = form.value.duration || '5-10秒'
     }
 
     generatedPrompt.value = promptGeneratorService.generatePrompt(request)
@@ -979,61 +841,6 @@ function openHelp() {
   showHelp.value = true
 }
 
-function openConfigTest() {
-  showConfigTest.value = true
-}
-
-async function testConfigLoad() {
-  try {
-    const config = configService.getConfig()
-    configTestResult.value = {
-      success: true,
-      timestamp: new Date().toISOString(),
-      summary: {
-        models: Object.keys(config.models).length,
-        domains: Object.keys(config.domains).length,
-        strategies: Object.keys(config.strategies).length,
-        enabledModels: configService.getEnabledModels().length
-      },
-      sampleData: {
-        firstModel: Object.keys(config.models)[0],
-        firstDomain: Object.keys(config.domains)[0],
-        firstStrategy: Object.keys(config.strategies)[0]
-      }
-    }
-  } catch (error) {
-    configTestResult.value = { success: false, message: `配置测试失败: ${error}` }
-  }
-}
-
-async function reloadConfig() {
-  try {
-    configLoaded.value = false
-    configTestResult.value = null
-    await configService.reload()
-    
-    // 更新UI数据
-    const enabledModels = configService.getEnabledModels()
-    availableModels.value = enabledModels.map(m => m.model_id)
-    availableProviders.value = enabledModels
-      .filter(model => model.model_id === 'qwen' || model.model_id === 'douyin' || model.model_id === 'openai')
-      .map(m => m.model_id)
-    availableDomains.value = configService.getDomainList()
-    
-    const strategies = configService.getStrategies()
-    optimizationStrategies.value = strategies.map(strategy => ({
-      id: strategy.strategy_id,
-      icon: strategy.icon,
-      name: strategy.name
-    }))
-    
-    configLoaded.value = true
-    configTestResult.value = { success: true, message: '配置重新加载成功' }
-  } catch (error) {
-    configTestResult.value = { success: false, message: `配置重新加载失败: ${error}` }
-  }
-}
-
 function saveSettings() {
   // 初始化 API 客户端
   if (apiConfig.value.openai_key) {
@@ -1070,9 +877,6 @@ onMounted(() => {
   if (config.minmax_key) apiService.initMinMax(config.minmax_key)
   if (config.zhipu_key) apiService.initZhipu(config.zhipu_key)
   if (config.douyin_key) apiService.initDouyin(config.douyin_key)
-
-  // 加载配置数据
-  loadConfig()
 })
 </script>
 
@@ -1938,158 +1742,5 @@ onMounted(() => {
   .library-grid {
     grid-template-columns: 1fr;
   }
-}
-
-/* 配置测试样式 */
-.config-test-modal {
-  max-width: 800px;
-}
-
-.loading-state {
-  text-align: center;
-  padding: 40px;
-}
-
-.spinner {
-  display: inline-block;
-  width: 40px;
-  height: 40px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #007bff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-top: 20px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.config-summary {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin-top: 15px;
-}
-
-.summary-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  background-color: white;
-  border-radius: 6px;
-  border: 1px solid #e0e0e0;
-}
-
-.summary-label {
-  font-weight: 500;
-  color: #555;
-}
-
-.summary-value {
-  font-weight: 600;
-  color: #007bff;
-}
-
-.config-details {
-  margin-bottom: 20px;
-}
-
-.detail-section {
-  margin-bottom: 20px;
-}
-
-.detail-section h4 {
-  margin-bottom: 10px;
-  color: #333;
-}
-
-.model-list,
-.domain-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.model-tag,
-.domain-tag {
-  background-color: #e3f2fd;
-  color: #1976d2;
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.domain-tag {
-  background-color: #f3e5f5;
-  color: #7b1fa2;
-}
-
-.config-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin: 20px 0;
-}
-
-.test-result {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-}
-
-.test-result h4 {
-  margin-top: 0;
-  color: #495057;
-  margin-bottom: 10px;
-}
-
-.test-result pre {
-  background-color: white;
-  padding: 15px;
-  border-radius: 6px;
-  overflow-x: auto;
-  font-size: 14px;
-  line-height: 1.4;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.app.dark .config-summary,
-.app.dark .summary-item,
-.app.dark .test-result {
-  background-color: #2d3748;
-  border-color: #4a5568;
-}
-
-.app.dark .summary-item {
-  background-color: #4a5568;
-}
-
-.app.dark .model-tag {
-  background-color: #2c5282;
-  color: #90cdf4;
-}
-
-.app.dark .domain-tag {
-  background-color: #553c9a;
-  color: #d6bcfa;
-}
-
-.app.dark .test-result pre {
-  background-color: #1a202c;
-  color: #cbd5e0;
 }
 </style>

@@ -310,8 +310,8 @@ export class StorageService {
    */
   getStatistics(): any {
     const prompts = this.getPrompts();
-    const domains: Record<string, number> = {};
-    const models: Record<string, number> = {};
+    const domains = {};
+    const models = {};
 
     prompts.forEach(p => {
       domains[p.domain] = (domains[p.domain] || 0) + 1;

@@ -1,4 +1,4 @@
-import type { ModelType, DomainType, DifficultyLevel, OutputFormat, GenerateRequest } from '@/types';
+import type { ModelType, DomainType, DifficultyLevel, OutputFormat, GenerateRequest, Prompt } from '@/types';
 import { MODEL_CHARACTERISTICS, DOMAIN_TEMPLATES } from '@/constants';
 
 /**
@@ -39,9 +39,6 @@ export class PromptGeneratorService {
     const length = this.getLengthHint(request.difficulty, request.domain);
     const planningPoints = this.getPlanningPoints(request.domain);
 
-    // 获取领域特定字段的默认值
-    const domainSpecificFields = this.getDomainSpecificFields(request);
-
     let prompt = template
       .replace('{specialty}', specialty)
       .replace('{format}', this.getFormatDescription(request.outputFormat))
@@ -53,11 +50,6 @@ export class PromptGeneratorService {
       .replace('{length}', length)
       .replace('{planningPoints}', planningPoints);
 
-    // 替换领域特定字段
-    for (const [field, value] of Object.entries(domainSpecificFields)) {
-      prompt = prompt.replace(new RegExp(`{${field}}`, 'g'), value);
-    }
-
     // 添加难度级别相关的指导
     prompt += `\n\n【难度等级】${request.difficulty}`;
     prompt += this.addDifficultyGuidance(request.difficulty);
@@ -67,41 +59,6 @@ export class PromptGeneratorService {
     prompt += this.getModelSpecificGuidance(request.model);
 
     return prompt;
-  }
-
-  /**
-   * 获取领域特定字段的默认值
-   */
-  private getDomainSpecificFields(request: GenerateRequest): Record<string, string> {
-    const fields: Record<string, string> = {};
-
-    // pet领域字段
-    if (request.domain === 'pet') {
-      fields['petType'] = request.petType || '狗狗/猫猫';
-      fields['petAge'] = request.petAge || '成年';
-      fields['healthStatus'] = request.healthStatus || '健康';
-      fields['specialCondition'] = request.specialCondition || '无特殊情况';
-    }
-
-    // dogVideo领域字段
-    if (request.domain === 'dogVideo') {
-      fields['videoType'] = request.videoType || '日常记录';
-      fields['scene'] = request.scene || '室内/户外';
-      fields['videoStyle'] = request.videoStyle || '温馨可爱';
-      fields['dogFeatures'] = request.dogFeatures || '活泼可爱';
-      fields['duration'] = request.duration || '1-3分钟';
-    }
-
-    // dogVideoGeneration领域字段
-    if (request.domain === 'dogVideoGeneration') {
-      fields['generationMode'] = request.generationMode || '文生视频';
-      fields['platform'] = request.platform || '可灵AI';
-      fields['videoStyle'] = request.videoStyle || '写实风格';
-      fields['dogFeatures'] = request.dogFeatures || '品种特征明显';
-      fields['duration'] = request.duration || '5-10秒';
-    }
-
-    return fields;
   }
 
   /**
@@ -130,14 +87,14 @@ export class PromptGeneratorService {
   }
 
   /**
-   * GPT 模型优化 - GPT类模型基本不需要额外包装
+   * GPT 模型优化
    */
   private optimizeForGPT(prompt: string): string {
-    return prompt;
+    return ` ${prompt}`;
   }
 
   /**
-   * 阿里云通义千问优化 - 添加中文优化的前缀和后缀
+   * 阿里云通义千问优化
    */
   private optimizeForQwen(prompt: string): string {
     return `你是一个专业的AI助手，能够帮助用户完成各种任务。

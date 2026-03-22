@@ -21,6 +21,7 @@ app.use(express.json());
 
 // 日志中间件
 app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   next();
 });
 
@@ -89,6 +90,7 @@ async function callOpenAI(
       'Content-Type': 'application/json',
     },
   });
+  console.log(client, 'client')
   const response = await client.post('/chat/completions', {
     model,
     messages,

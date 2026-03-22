@@ -1,7 +1,6 @@
-import axios from 'axios';
-import type { APIResponse } from '@/types';
-import { API_PROXY_URL, AXIOS_CONFIG, USE_BACKEND_PROXY } from '@/config/api.config';
-import { externalApiService } from './externalApiService';
+import axios, { AxiosInstance } from 'axios';
+import type { APIResponse, OptimizeRequest } from '@/types';
+import { API_PROXY_URL, AXIOS_CONFIG } from '@/config/api.config';
 
 // ============ 配置 ============
 
@@ -66,27 +65,6 @@ export class ProxyAPIClient {
         payload.top_p = top_p;
       }
 
-      // 根据开关决定走后端代理还是本地 Express 代理
-      if (USE_BACKEND_PROXY()) {
-        // ===== 后端 AI Proxy（HMAC 签名，camelCase 字段） =====
-        const backendPayload = {
-          provider: this.provider,
-          model: this.model,
-          messages,
-          temperature,
-          maxTokens: max_tokens,  // snake_case -> camelCase
-          ...(top_p !== undefined ? { topP: top_p } : {}),  // snake_case -> camelCase
-          apiKey: this.apiKey,
-          stream: false,
-        };
-
-        const data = await externalApiService.chatCompletions(backendPayload);
-
-        // 后端响应: data.choices[0].message.content (camelCase)
-        return data.choices[0].message.content;
-      }
-
-      // ===== 本地 Express 代理（原始逻辑，snake_case 字段） =====
       const response = await proxyClient.post(
         `/proxy/${this.provider}/chat`,
         payload
