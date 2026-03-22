@@ -1,0 +1,50 @@
+name: PromptOptimizer Pro
+version: 1.0.0
+description: AI 提示词生成、优化和管理平台
+author: Your Company
+license: MIT
+
+productName: PromptOptimizer Pro
+appId: com.promptoptimizer.pro
+
+directories:
+  output: release
+  buildResources: public
+
+files:
+  - dist/**/*
+  - package.json
+  - node_modules/**/*
+
+win:
+  target:
+    - portable
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: PromptOptimizer Pro
+
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.utilities
+
+dmg:
+  contents:
+    - x: 110
+      y: 150
+      type: file
+    - x: 240
+      y: 150
+      type: link
+      path: /Applications
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Utility

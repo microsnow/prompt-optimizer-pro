@@ -1,0 +1,125 @@
+[2026-03-19T02:07:50.988Z] [INFO] [CONFIG] 代理服务器配置
+{
+  "environment": "development",
+  "allowedOrigins": [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "file://"
+  ]
+}
+[2026-03-19T02:07:50.995Z] [INFO] [SERVER_START] 🚀 API 代理服务器启动成功
+{
+  "port": 3001,
+  "url": "http://localhost:3001",
+  "environment": "development",
+  "logLevel": "INFO"
+}
+[2026-03-19T02:07:50.996Z] [INFO] [SERVER_START] 📌 支持的提供商: OpenAI, Qwen, MiniMax, Zhipu, Douyin(豆包)
+[2026-03-19T02:07:50.996Z] [INFO] [SERVER_START] 📍 主端点: POST /v1/chat/completions
+[2026-03-19T02:07:50.997Z] [INFO] [SERVER_START] 📊 日志查看: GET /logs
+[2026-03-19T02:07:50.997Z] [INFO] [SERVER_START] ❤️  健康检查: GET /health
+[2026-03-19T02:09:03.823Z] [INFO] [HTTP_REQUEST] POST /proxy/qwen/chat
+{
+  "method": "POST",
+  "path": "/proxy/qwen/chat",
+  "query": null,
+  "contentType": "application/json",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb"
+}
+[2026-03-19T02:09:03.825Z] [INFO] [ROUTE_PROXY] [1773886143825-ny0q4uv] 代理 API 请求 /proxy/qwen/chat
+{
+  "requestId": "1773886143825-ny0q4uv",
+  "provider": "qwen",
+  "endpoint": "chat",
+  "model": "qwen3.5-plus",
+  "messageCount": 2
+}
+[2026-03-19T02:09:03.827Z] [DEBUG] [PROCESSING] [1773886143825-ny0q4uv] 转发到新格式端点
+[2026-03-19T02:09:03.828Z] [INFO] [CHAT_COMPLETION] 调用 QWEN 开始
+{
+  "provider": "qwen",
+  "model": "qwen3.5-plus",
+  "messageCount": 2
+}
+[2026-03-19T02:09:03.829Z] [DEBUG] [QWEN] 路由到 Qwen 处理器
+[2026-03-19T02:09:03.830Z] [DEBUG] [QWEN] 开始调用 Qwen API
+{
+  "model": "qwen3.5-plus",
+  "messageCount": 2,
+  "temperature": 0.7,
+  "max_tokens": 2000
+}
+[2026-03-19T02:09:03.832Z] [TRACE] [QWEN] 发送请求到 Qwen API
+{
+  "endpoint": "/chat/completions",
+  "model": "qwen3.5-plus"
+}
+[2026-03-19T02:09:59.177Z] [WARN] [QWEN] 调用成功 耗时 55347ms
+{
+  "operation": "调用成功",
+  "duration": "55347ms",
+  "warning": "⚠️  耗时过长"
+}
+[2026-03-19T02:09:59.179Z] [DEBUG] [QWEN] API 响应成功
+{
+  "status": 200,
+  "contentLength": 11210,
+  "outputLength": 847,
+  "usage": {
+    "completion_tokens": 2800,
+    "prompt_tokens": 230,
+    "completion_tokens_details": {
+      "text_tokens": 2800,
+      "reasoning_tokens": 2369
+    },
+    "prompt_tokens_details": {
+      "text_tokens": 230
+    },
+    "total_tokens": 3030
+  }
+}
+[2026-03-19T02:09:59.185Z] [TRACE] [QWEN] OpenAI 格式响应
+{
+  "model": "qwen3.5-plus",
+  "messageCount": 1,
+  "contentPreview": "# Role\n你是一位拥有多年实战经验的资深 Vue 前端开发工程师，擅长构建高性能、可维护的大型前"
+}
+[2026-03-19T02:09:59.186Z] [WARN] [CHAT_COMPLETION] QWEN 调用 耗时 55358ms
+{
+  "operation": "QWEN 调用",
+  "duration": "55358ms",
+  "warning": "⚠️  耗时过长"
+}
+[2026-03-19T02:09:59.187Z] [INFO] [CHAT_COMPLETION] 调用 QWEN 成功
+{
+  "provider": "qwen",
+  "model": "qwen3.5-plus",
+  "duration": "55358ms",
+  "contentLength": 847,
+  "usage": {
+    "completion_tokens": 2800,
+    "prompt_tokens": 230,
+    "completion_tokens_details": {
+      "text_tokens": 2800,
+      "reasoning_tokens": 2369
+    },
+    "prompt_tokens_details": {
+      "text_tokens": 230
+    },
+    "total_tokens": 3030
+  }
+}
+[2026-03-19T02:09:59.188Z] [INFO] [SUCCESS] [1773886143825-ny0q4uv] 代理 API 调用成功
+{
+  "requestId": "1773886143825-ny0q4uv",
+  "provider": "qwen",
+  "model": "qwen3.5-plus",
+  "duration": "55363ms"
+}
+[2026-03-19T02:09:59.188Z] [DEBUG] [HTTP_RESPONSE] POST /proxy/qwen/chat
+{
+  "statusCode": 200,
+  "method": "POST",
+  "path": "/proxy/qwen/chat"
+}

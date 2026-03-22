@@ -1,0 +1,60 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "rubric_id": "clarity",
+      "name": "清晰度",
+      "weight": 0.2,
+      "criteria": [
+        "语言是否清晰易懂",
+        "是否避免了歧义",
+        "句子结构是否简洁"
+      ]
+    },
+    {
+      "id": 2,
+      "rubric_id": "specificity",
+      "name": "具体性",
+      "weight": 0.2,
+      "criteria": [
+        "是否包含具体例子",
+        "是否明确了数值范围",
+        "是否有具体指标"
+      ]
+    },
+    {
+      "id": 3,
+      "rubric_id": "completeness",
+      "name": "完整性",
+      "weight": 0.2,
+      "criteria": [
+        "是否包含所有必要信息",
+        "是否覆盖了预期输出",
+        "是否提供了背景信息"
+      ]
+    },
+    {
+      "id": 4,
+      "rubric_id": "structure",
+      "name": "结构",
+      "weight": 0.2,
+      "criteria": [
+        "组织结构是否清晰",
+        "是否使用了逻辑层次",
+        "是否易于理解"
+      ]
+    },
+    {
+      "id": 5,
+      "rubric_id": "executability",
+      "name": "可执行性",
+      "weight": 0.2,
+      "criteria": [
+        "是否能直接使用",
+        "是否提供了实施步骤",
+        "是否包含必要的格式要求"
+      ]
+    }
+  ]
+}

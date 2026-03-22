@@ -1,0 +1,16 @@
+# Python API Proxy Server Dependencies
+# Install: pip install -r requirements.txt
+
+# Web Framework
+Flask==3.0.0
+flask-cors==4.0.0
+
+# HTTP Async Client
+aiohttp==3.9.1
+
+# Production WSGI Server (optional, for production)
+waitress==3.0.0
+
+# Other Dependencies
+python-dotenv==1.0.0
+requests==2.31.0
